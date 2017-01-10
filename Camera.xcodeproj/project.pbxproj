@@ -12,6 +12,13 @@
 		127675051E232E1F00086D4D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 127675031E232E1F00086D4D /* Main.storyboard */; };
 		127675071E232E1F00086D4D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 127675061E232E1F00086D4D /* Assets.xcassets */; };
 		1276750A1E232E1F00086D4D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 127675081E232E1F00086D4D /* LaunchScreen.storyboard */; };
+		127675121E2335E500086D4D /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 127675111E2335E500086D4D /* Camera.swift */; };
+		127675181E23396E00086D4D /* Camera+Photo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 127675171E23396E00086D4D /* Camera+Photo.swift */; };
+		1276751A1E23397800086D4D /* Camera+Video.swift in Sources */ = {isa = PBXBuildFile; fileRef = 127675191E23397800086D4D /* Camera+Video.swift */; };
+		1276751E1E235FC900086D4D /* CameraViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1276751D1E235FC900086D4D /* CameraViewController.swift */; };
+		127675201E237EB000086D4D /* CapturePhotoDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1276751F1E237EB000086D4D /* CapturePhotoDelegate.swift */; };
+		127675221E23A7A100086D4D /* Camera.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 127675211E23A7A100086D4D /* Camera.storyboard */; };
+		127675241E23A9DC00086D4D /* Camera+PreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 127675231E23A9DC00086D4D /* Camera+PreviewView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +29,13 @@
 		127675061E232E1F00086D4D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		127675091E232E1F00086D4D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1276750B1E232E1F00086D4D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		127675111E2335E500086D4D /* Camera.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
+		127675171E23396E00086D4D /* Camera+Photo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Camera+Photo.swift"; sourceTree = "<group>"; };
+		127675191E23397800086D4D /* Camera+Video.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Camera+Video.swift"; sourceTree = "<group>"; };
+		1276751D1E235FC900086D4D /* CameraViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraViewController.swift; sourceTree = "<group>"; };
+		1276751F1E237EB000086D4D /* CapturePhotoDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CapturePhotoDelegate.swift; sourceTree = "<group>"; };
+		127675211E23A7A100086D4D /* Camera.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Camera.storyboard; sourceTree = "<group>"; };
+		127675231E23A9DC00086D4D /* Camera+PreviewView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Camera+PreviewView.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +70,13 @@
 			children = (
 				127674FF1E232E1F00086D4D /* AppDelegate.swift */,
 				127675011E232E1F00086D4D /* ViewController.swift */,
+				1276751D1E235FC900086D4D /* CameraViewController.swift */,
+				127675211E23A7A100086D4D /* Camera.storyboard */,
+				127675111E2335E500086D4D /* Camera.swift */,
+				1276751F1E237EB000086D4D /* CapturePhotoDelegate.swift */,
+				127675171E23396E00086D4D /* Camera+Photo.swift */,
+				127675191E23397800086D4D /* Camera+Video.swift */,
+				127675231E23A9DC00086D4D /* Camera+PreviewView.swift */,
 				127675031E232E1F00086D4D /* Main.storyboard */,
 				127675061E232E1F00086D4D /* Assets.xcassets */,
 				127675081E232E1F00086D4D /* LaunchScreen.storyboard */,
@@ -125,6 +146,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1276750A1E232E1F00086D4D /* LaunchScreen.storyboard in Resources */,
+				127675221E23A7A100086D4D /* Camera.storyboard in Resources */,
 				127675071E232E1F00086D4D /* Assets.xcassets in Resources */,
 				127675051E232E1F00086D4D /* Main.storyboard in Resources */,
 			);
@@ -137,8 +159,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				127675241E23A9DC00086D4D /* Camera+PreviewView.swift in Sources */,
 				127675021E232E1F00086D4D /* ViewController.swift in Sources */,
+				1276751A1E23397800086D4D /* Camera+Video.swift in Sources */,
 				127675001E232E1F00086D4D /* AppDelegate.swift in Sources */,
+				127675201E237EB000086D4D /* CapturePhotoDelegate.swift in Sources */,
+				1276751E1E235FC900086D4D /* CameraViewController.swift in Sources */,
+				127675121E2335E500086D4D /* Camera.swift in Sources */,
+				127675181E23396E00086D4D /* Camera+Photo.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -262,7 +290,7 @@
 				DEVELOPMENT_TEAM = 88ACA86N96;
 				INFOPLIST_FILE = Camera/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = me.cheeks.camera.Camera;
+				PRODUCT_BUNDLE_IDENTIFIER = me.cheeks.camera;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 3.0;
 			};
@@ -275,7 +303,7 @@
 				DEVELOPMENT_TEAM = 88ACA86N96;
 				INFOPLIST_FILE = Camera/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = me.cheeks.camera.Camera;
+				PRODUCT_BUNDLE_IDENTIFIER = me.cheeks.camera;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 3.0;
 			};

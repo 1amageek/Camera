@@ -31,8 +31,12 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>&quot;Take a picture&quot;</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>&quot;Mic&quot;</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>&quot;Library&quot;</string>
 </dict>
 </plist>
