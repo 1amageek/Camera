@@ -36,9 +36,18 @@ class Camera: NSObject {
     
     // Capture mode
     enum CaptureMode {
+        
+        // In this mode, you can shoot LivePhoto
         case photo
+        
+        // You can only shoot movies
         case movie
+        
+        // LivePhoto shooting can not be performed in this mode
+        case both
     }
+    
+    private(set) var captureMode: CaptureMode = .photo
     
     // LivePhoto mode
     enum LivePhotoMode {
@@ -442,17 +451,11 @@ class Camera: NSObject {
         
         sessionQueue.async { [unowned self] in
             self.livePhotoMode = livePhotoMode
-            self.session.beginConfiguration()
-            self.session.removeOutput(self.movieFileOutput)
-            self.session.sessionPreset = self.sessionPreset
-            self.session.commitConfiguration()
             DispatchQueue.main.async {
                 completion?()
             }
         }
     }
-    
-    private var captureMode: CaptureMode = .photo
     
     /**
      Change capture mode
@@ -462,6 +465,8 @@ class Camera: NSObject {
         if self.captureMode == captureMode {
             return
         }
+        
+        self.captureMode = captureMode
         
         switch captureMode {
         case .photo:
@@ -473,7 +478,7 @@ class Camera: NSObject {
                  */
                 self.session.beginConfiguration()
                 self.session.removeOutput(self.movieFileOutput)
-                self.session.sessionPreset = self.sessionPreset
+                self.session.sessionPreset = AVCaptureSessionPresetPhoto
                 self.session.commitConfiguration()
                 
                 self.movieFileOutput = nil
@@ -488,6 +493,35 @@ class Camera: NSObject {
             }
         case .movie:
             sessionQueue.async { [unowned self] in
+                let movieFileOutput = AVCaptureMovieFileOutput()
+                
+                if self.session.canAddOutput(movieFileOutput) {
+                    self.session.beginConfiguration()
+                    self.session.addOutput(movieFileOutput)
+                    self.session.sessionPreset = AVCaptureSessionPresetHigh
+                    if let connection = movieFileOutput.connection(withMediaType: AVMediaTypeVideo) {
+                        if connection.isVideoStabilizationSupported {
+                            connection.preferredVideoStabilizationMode = .auto
+                        }
+                    }
+                    self.session.commitConfiguration()
+                    
+                    self.movieFileOutput = movieFileOutput
+                    
+                    DispatchQueue.main.async {
+                        completion?()
+                    }
+                }
+            }
+        case .both:
+            
+            sessionQueue.async { [unowned self] in
+                
+                if self.livePhotoMode != .off {
+                    print("[Camera] To use both mode you need to turn off livePhotoMode.")
+                    return
+                }
+                
                 let movieFileOutput = AVCaptureMovieFileOutput()
                 
                 if self.session.canAddOutput(movieFileOutput) {

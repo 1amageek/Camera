@@ -77,13 +77,18 @@ class CameraViewController: UIViewController {
             self.camera.setupResult = .notAuthorized
         }
         
+        // Configure camera
         self.camera.configure { [weak self](isRunnginSession) in
             self?.flashButton.isEnabled = isRunnginSession
             self?.cameraButton.isEnabled = isRunnginSession
             self?.triggerView.isEnabled = isRunnginSession
         }
+        
+        // Setting mode
         self.camera.change(livePhotoMode: .off, completion: nil)
-
+        self.camera.change(captureMode: .both, completion: nil)
+        
+        // Photo
         self.triggerView.capture = { [weak self] in
             
             self?.flashButton.isHidden = true
@@ -98,10 +103,15 @@ class CameraViewController: UIViewController {
             }
         }
         
+        // Movie
         self.triggerView.recordingStart = { [weak self] in
             self?.flashButton.isHidden = true
             self?.cameraButton.isHidden = true
-            self?.camera.change(captureMode: .movie, completion: nil)
+            
+            if self?.camera.captureMode != .both {
+                self?.camera.change(captureMode: .movie, completion: nil)
+            }
+            
             self?.camera.movieRecordingStart(completion: { 
                 
             })
