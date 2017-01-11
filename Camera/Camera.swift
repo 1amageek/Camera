@@ -397,7 +397,7 @@ class Camera: NSObject {
         }
     }
     
-    func startSession() {
+    func startSession(completion: ((Bool) -> Void)?) {
         sessionQueue.async {
             switch self.setupResult {
             case .success:
@@ -405,26 +405,16 @@ class Camera: NSObject {
                 self.addObservers()
                 self.session.startRunning()
                 self.isSessionRunning = self.session.isRunning
-                
-            case .notAuthorized:
-                DispatchQueue.main.async { [unowned self] in
-//                    let message = NSLocalizedString("AVCam doesn't have permission to use the camera, please change privacy settings", comment: "Alert message when the user has denied access to the camera")
-//                    let alertController = UIAlertController(title: "AVCam", message: message, preferredStyle: .alert)
-//                    alertController.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "Alert OK button"), style: .cancel, handler: nil))
-//                    alertController.addAction(UIAlertAction(title: NSLocalizedString("Settings", comment: "Alert button to open Settings"), style: .`default`, handler: { action in
-//                        UIApplication.shared.open(URL(string: UIApplicationOpenSettingsURLString)!, options: [:], completionHandler: nil)
-//                    }))
-//                    
-//                    self.present(alertController, animated: true, completion: nil)
+                DispatchQueue.main.async {
+                    completion?(true)
                 }
-                
+            case .notAuthorized:
+                DispatchQueue.main.async {
+                    completion?(false)
+                }
             case .configurationFailed:
-                DispatchQueue.main.async { [unowned self] in
-//                    let message = NSLocalizedString("Unable to capture media", comment: "Alert message when something goes wrong during capture session configuration")
-//                    let alertController = UIAlertController(title: "AVCam", message: message, preferredStyle: .alert)
-//                    alertController.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "Alert OK button"), style: .cancel, handler: nil))
-//                    
-//                    self.present(alertController, animated: true, completion: nil)
+                DispatchQueue.main.async {
+                    completion?(false)
                 }
             }
         }

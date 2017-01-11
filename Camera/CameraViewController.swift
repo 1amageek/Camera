@@ -118,7 +118,11 @@ class CameraViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.camera.startSession()
+        self.camera.startSession { (authorized) in
+            if !authorized {
+                // TODO: 
+            }
+        }
     }
     
     override func viewDidDisappear(_ animated: Bool) {
