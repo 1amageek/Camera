@@ -24,6 +24,10 @@ class Camera: NSObject {
     
     let videoDeviceDiscoverySession = AVCaptureDeviceDiscoverySession(deviceTypes: [.builtInWideAngleCamera, .builtInDualCamera], mediaType: AVMediaTypeVideo, position: .unspecified)!
     
+    // Session running callback
+    
+    var sessionRunnginBlock: ((Bool) -> Void)?
+    
     // Movie recording callback
     
     var didStartRecordingBlock: (() -> Void)?
@@ -207,7 +211,6 @@ class Camera: NSObject {
     
     private func removeObservers() {
         NotificationCenter.default.removeObserver(self)
-        
         session.removeObserver(self, forKeyPath: "running", context: &sessionRunningObserveContext)
     }
     
@@ -215,17 +218,8 @@ class Camera: NSObject {
         if context == &sessionRunningObserveContext {
             let newValue = change?[.newKey] as AnyObject?
             guard let isSessionRunning = newValue?.boolValue else { return }
-            let isLivePhotoCaptureSupported = photoOutput.isLivePhotoCaptureSupported
-            let isLivePhotoCaptureEnabled = photoOutput.isLivePhotoCaptureEnabled
-            
             DispatchQueue.main.async { [unowned self] in
-                // Only enable the ability to change camera if the device has more than one camera.
-//                self.cameraButton.isEnabled = isSessionRunning && self.videoDeviceDiscoverySession.uniqueDevicePositionsCount() > 1
-//                self.recordButton.isEnabled = isSessionRunning && self.movieFileOutput != nil
-//                self.photoButton.isEnabled = isSessionRunning
-//                self.captureModeControl.isEnabled = isSessionRunning
-//                self.livePhotoModeButton.isEnabled = isSessionRunning && isLivePhotoCaptureEnabled
-//                self.livePhotoModeButton.isHidden = !(isSessionRunning && isLivePhotoCaptureSupported)
+                self.sessionRunnginBlock?(isSessionRunning)
             }
         }
         else {
@@ -396,7 +390,8 @@ class Camera: NSObject {
     
     // MARK: - 
     
-    func configure() {
+    func configure(completion: ((Bool) -> Void)?) {
+        self.sessionRunnginBlock = completion
         sessionQueue.async { [unowned self] in
             self.configureSession()
         }

@@ -12,6 +12,16 @@ extension Camera {
     
     class TriggerView: UIView {
         
+        var isEnabled: Bool {
+            set {
+                self.isUserInteractionEnabled = isEnabled
+                self.trigger.alpha = isEnabled ? 1 : 0.5
+            }
+            get {
+                return self.isUserInteractionEnabled
+            }
+        }
+        
         var minimumAroundRadius: CGFloat = 44
         
         var maximumAroundRadius: CGFloat = 72

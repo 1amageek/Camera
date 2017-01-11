@@ -35,8 +35,6 @@ extension Camera {
                     /*
                      Setup background task.
                      This is needed because the `capture(_:, didFinishRecordingToOutputFileAt:, fromConnections:, error:)`
-                     callback is not received until AVCam returns to the foreground unless you request background execution time.
-                     This also ensures that there will be time to write the file to the photo library when AVCam is backgrounded.
                      To conclude this background execution, endBackgroundTask(_:) is called in
                      `capture(_:, didFinishRecordingToOutputFileAt:, fromConnections:, error:)` after the recorded file has been saved.
                      */
@@ -156,12 +154,7 @@ extension Camera: AVCaptureFileOutputRecordingDelegate {
         
         // Enable the Camera and Record buttons to let the user switch camera and start another recording.
         DispatchQueue.main.async { [unowned self] in
-            // Only enable the ability to change camera if the device has more than one camera.
             self.didFinishRecordingBlock?(error)
-            //            self.cameraButton.isEnabled = self.videoDeviceDiscoverySession.uniqueDevicePositionsCount() > 1
-            //            self.recordButton.isEnabled = true
-            //            self.captureModeControl.isEnabled = true
-            //            self.recordButton.setTitle(NSLocalizedString("Record", comment: "Recording button record title"), for: [])
         }
     }
 }
