@@ -12,19 +12,43 @@ import Photos
 
 class CameraViewController: UIViewController {
     
+    @IBOutlet weak var flashButton: UIButton!
+    @IBOutlet weak var cameraButton: UIButton!
+    
+    @IBAction func flashButtonAction(_ sender: Any) {
+        
+    }
+    
+    @IBAction func cameraButtonAction(_ sender: Any) {
+        self.view.isUserInteractionEnabled = false
+        self.camera.changeCamera { [weak self] in
+            self?.view.isUserInteractionEnabled = true
+        }
+    }
+    
     lazy var camera: Camera = {
         let camera: Camera = Camera(previewView: self.previewView)
         return camera
     }()
     
+    lazy var previewView: Camera.PreviewView = {
+        let view: Camera.PreviewView = Camera.PreviewView(frame: self.view.bounds)
+        return view
+    }()
+    
+    lazy var triggerView: Camera.TriggerView = {
+        let view: Camera.TriggerView = Camera.TriggerView()
+        return view
+    }()
+    
     override func awakeFromNib() {
         super.awakeFromNib()
-        self.view.addSubview(self.previewView)
+        self.view.insertSubview(previewView, at: 0)
+        self.view.addSubview(triggerView)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         
         switch AVCaptureDevice.authorizationStatus(forMediaType: AVMediaTypeVideo) {
         case .authorized:
@@ -54,6 +78,38 @@ class CameraViewController: UIViewController {
         }
         
         self.camera.configure()
+        self.camera.change(livePhotoMode: .off, completion: nil)
+
+        self.triggerView.capture = { [weak self] in
+            
+            self?.flashButton.isHidden = true
+            self?.cameraButton.isHidden = true
+            
+            self?.camera.capturePhoto(capturingLivePhotoBlock: { [weak self] (inProgressLivePhotoCapturesCount) in
+                
+            }) { [weak self] in
+                self?.triggerView.toDefault(animated: false)
+                self?.flashButton.isHidden = false
+                self?.cameraButton.isHidden = false
+            }
+        }
+        
+        self.triggerView.recordingStart = { [weak self] in
+            self?.flashButton.isHidden = true
+            self?.cameraButton.isHidden = true
+            self?.camera.change(captureMode: .movie, completion: nil)
+            self?.camera.movieRecordingStart(completion: {  [weak self] in
+                
+            })
+        }
+        
+        self.triggerView.recordingStop = { [weak self] in
+            self?.camera.movieRecordingStop(completion: {  [weak self] (error) in
+                self?.flashButton.isHidden = false
+                self?.cameraButton.isHidden = false
+            })
+        }
+        
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -66,9 +122,8 @@ class CameraViewController: UIViewController {
         self.camera.stopSession()
     }
     
-    lazy var previewView: Camera.PreviewView = {
-        let view: Camera.PreviewView = Camera.PreviewView(frame: self.view.bounds)
-        return view
-    }()
+    override func viewWillLayoutSubviews() {
+        triggerView.center = CGPoint(x: self.view.bounds.width / 2, y: self.view.bounds.height - 150)
+    }
     
 }

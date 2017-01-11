@@ -11,7 +11,8 @@ import AVFoundation
 import Photos
 
 extension Camera {
-    func capturePhoto() {
+    
+    func capturePhoto(capturingLivePhotoBlock: ((_ inProgressLivePhotoCaptures: Int) -> Void)?, completion: (() -> Void)?) {
         /*
          Retrieve the video preview layer's video orientation on the main queue before
          entering the session queue. We do this to ensure UI elements are accessed on
@@ -32,14 +33,16 @@ extension Camera {
             if photoSettings.availablePreviewPhotoPixelFormatTypes.count > 0 {
                 photoSettings.previewPhotoFormat = [kCVPixelBufferPixelFormatTypeKey as String : photoSettings.availablePreviewPhotoPixelFormatTypes.first!]
             }
-            if self.livePhotoMode == .on && self.photoOutput.isLivePhotoCaptureSupported { // Live Photo capture is not supported in movie mode.
-                let livePhotoMovieFileName = NSUUID().uuidString
-                let livePhotoMovieFilePath = (NSTemporaryDirectory() as NSString).appendingPathComponent((livePhotoMovieFileName as NSString).appendingPathExtension("mov")!)
+            
+            // Live Photo capture is not supported in movie mode.
+            if self.livePhotoMode == .on && self.photoOutput.isLivePhotoCaptureSupported {
+                let livePhotoMovieFileName: String = NSUUID().uuidString
+                let livePhotoMovieFilePath: String = (NSTemporaryDirectory() as NSString).appendingPathComponent((livePhotoMovieFileName as NSString).appendingPathExtension("mov")!)
                 photoSettings.livePhotoMovieFileURL = URL(fileURLWithPath: livePhotoMovieFilePath)
             }
             
             // Use a separate object for the photo capture delegate to isolate each capture life cycle.
-            let photoCaptureDelegate = PhotoCaptureDelegate(with: photoSettings, willCapturePhotoAnimation: {
+            let photoCaptureDelegate: PhotoCaptureDelegate = PhotoCaptureDelegate(with: photoSettings, willCapturePhotoAnimation: {
                 DispatchQueue.main.async { [unowned self] in
                     self.previewView.videoPreviewLayer.opacity = 0
                     UIView.animate(withDuration: 0.25) { [unowned self] in
@@ -60,23 +63,18 @@ extension Camera {
                         self.inProgressLivePhotoCapturesCount -= 1
                     }
                     
-                    let inProgressLivePhotoCapturesCount = self.inProgressLivePhotoCapturesCount
-                    DispatchQueue.main.async { [unowned self] in
-//                        if inProgressLivePhotoCapturesCount > 0 {
-//                            self.capturingLivePhotoLabel.isHidden = false
-//                        }
-//                        else if inProgressLivePhotoCapturesCount == 0 {
-//                            self.capturingLivePhotoLabel.isHidden = true
-//                        }
-//                        else {
-//                            print("Error: In progress live photo capture count is less than 0");
-//                        }
+                    let inProgressLivePhotoCapturesCount: Int = self.inProgressLivePhotoCapturesCount
+                    DispatchQueue.main.async {
+                        capturingLivePhotoBlock?(inProgressLivePhotoCapturesCount)
                     }
                 }
             }, completed: { [unowned self] photoCaptureDelegate in
                 // When the capture is complete, remove a reference to the photo capture delegate so it can be deallocated.
                 self.sessionQueue.async { [unowned self] in
                     self.inProgressPhotoCaptureDelegates[photoCaptureDelegate.requestedPhotoSettings.uniqueID] = nil
+                }
+                DispatchQueue.main.async {
+                    completion?()
                 }
                 }
             )
@@ -86,8 +84,10 @@ extension Camera {
              we store it in an array to maintain a strong reference to this object
              until the capture is completed.
              */
-//            self.inProgressPhotoCaptureDelegates[photoCaptureDelegate.requestedPhotoSettings.uniqueID] = photoCaptureDelegate
-//            self.photoOutput.capturePhoto(with: photoSettings, delegate: photoCaptureDelegate)
+            self.inProgressPhotoCaptureDelegates[photoCaptureDelegate.requestedPhotoSettings.uniqueID] = photoCaptureDelegate
+            self.photoOutput.capturePhoto(with: photoSettings, delegate: photoCaptureDelegate)
         }
     }
+    
+
 }

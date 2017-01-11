@@ -12,30 +12,25 @@ import Photos
 
 extension Camera {
     
-    func movieRecording() {
-        guard let movieFileOutput = self.movieFileOutput else {
-            return
-        }
-        
-        /*
-         Disable the Camera button until recording finishes, and disable
-         the Record button until recording starts or finishes.
-         
-         See the AVCaptureFileOutputRecordingDelegate methods.
-         */
-//        cameraButton.isEnabled = false
-//        recordButton.isEnabled = false
-//        captureModeControl.isEnabled = false
-        
+    func movieRecordingStart(completion: (() -> Void)?) {
+
         /*
          Retrieve the video preview layer's video orientation on the main queue
          before entering the session queue. We do this to ensure UI elements are
          accessed on the main thread and session configuration is done on the session queue.
          */
-        let videoPreviewLayerOrientation = previewView.videoPreviewLayer.connection.videoOrientation
-        
+        let videoPreviewLayerOrientation: AVCaptureVideoOrientation = previewView.videoPreviewLayer.connection.videoOrientation
         sessionQueue.async { [unowned self] in
+            
+            guard let movieFileOutput = self.movieFileOutput else {
+                return
+            }
+            
             if !movieFileOutput.isRecording {
+                debugPrint("[Camera+Video] movie recording start.")
+                
+                self.didStartRecordingBlock = completion
+                
                 if UIDevice.current.isMultitaskingSupported {
                     /*
                      Setup background task.
@@ -49,17 +44,124 @@ extension Camera {
                 }
                 
                 // Update the orientation on the movie file output video connection before starting recording.
-                let movieFileOutputConnection = self.movieFileOutput?.connection(withMediaType: AVMediaTypeVideo)
-                movieFileOutputConnection?.videoOrientation = videoPreviewLayerOrientation
+                let movieFileOutputConnection: AVCaptureConnection = movieFileOutput.connection(withMediaType: AVMediaTypeVideo)
+                movieFileOutputConnection.videoOrientation = videoPreviewLayerOrientation
                 
                 // Start recording to a temporary file.
-                let outputFileName = NSUUID().uuidString
-                let outputFilePath = (NSTemporaryDirectory() as NSString).appendingPathComponent((outputFileName as NSString).appendingPathExtension("mov")!)
+                let outputFileName: String = NSUUID().uuidString
+                let outputFilePath: String = (NSTemporaryDirectory() as NSString).appendingPathComponent((outputFileName as NSString).appendingPathExtension("mov")!)
                 movieFileOutput.startRecording(toOutputFileURL: URL(fileURLWithPath: outputFilePath), recordingDelegate: self)
+                
             }
-            else {
+        }
+    }
+
+    func movieRecordingStop(completion: ((Error?) -> Void)?) {
+        
+        /*
+         Retrieve the video preview layer's video orientation on the main queue
+         before entering the session queue. We do this to ensure UI elements are
+         accessed on the main thread and session configuration is done on the session queue.
+         */
+        
+        sessionQueue.async { [unowned self] in
+            
+            guard let movieFileOutput = self.movieFileOutput else {
+                return
+            }
+            
+            if movieFileOutput.isRecording {
+                debugPrint("[Camera+Video] movie recording stop.")
+                
+                self.didFinishRecordingBlock = completion
+                
                 movieFileOutput.stopRecording()
             }
+        }
+    }
+    
+}
+
+extension Camera: AVCaptureFileOutputRecordingDelegate {
+    
+    func capture(_ captureOutput: AVCaptureFileOutput!, didStartRecordingToOutputFileAt fileURL: URL!, fromConnections connections: [Any]!) {
+        // Enable the Record button to let the user stop the recording.
+        DispatchQueue.main.async { [unowned self] in
+            self.didStartRecordingBlock?()
+        }
+    }
+    
+    func capture(_ captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAt outputFileURL: URL!, fromConnections connections: [Any]!, error: Error!) {
+        /*
+         Note that currentBackgroundRecordingID is used to end the background task
+         associated with this recording. This allows a new recording to be started,
+         associated with a new UIBackgroundTaskIdentifier, once the movie file output's
+         `isRecording` property is back to false — which happens sometime after this method
+         returns.
+         
+         Note: Since we use a unique file path for each recording, a new recording will
+         not overwrite a recording currently being saved.
+         */
+        func cleanup() {
+            let path = outputFileURL.path
+            if FileManager.default.fileExists(atPath: path) {
+                do {
+                    try FileManager.default.removeItem(atPath: path)
+                }
+                catch {
+                    print("Could not remove file at url: \(outputFileURL)")
+                }
+            }
+            
+            if let currentBackgroundRecordingID = backgroundRecordingID {
+                backgroundRecordingID = UIBackgroundTaskInvalid
+                
+                if currentBackgroundRecordingID != UIBackgroundTaskInvalid {
+                    UIApplication.shared.endBackgroundTask(currentBackgroundRecordingID)
+                }
+            }
+        }
+        
+        var success = true
+        
+        if error != nil {
+            print("Movie file finishing error: \(error)")
+            success = (((error as NSError).userInfo[AVErrorRecordingSuccessfullyFinishedKey] as AnyObject).boolValue)!
+        }
+        
+        if success {
+            // Check authorization status.
+            PHPhotoLibrary.requestAuthorization { status in
+                if status == .authorized {
+                    // Save the movie file to the photo library and cleanup.
+                    PHPhotoLibrary.shared().performChanges({
+                        let options = PHAssetResourceCreationOptions()
+                        options.shouldMoveFile = true
+                        let creationRequest = PHAssetCreationRequest.forAsset()
+                        creationRequest.addResource(with: .video, fileURL: outputFileURL, options: options)
+                    }, completionHandler: { success, error in
+                        if !success {
+                            print("Could not save movie to photo library: \(error)")
+                        }
+                        cleanup()
+                    }
+                    )
+                } else {
+                    cleanup()
+                }
+            }
+        } else {
+            cleanup()
+        }
+        
+        // Enable the Camera and Record buttons to let the user switch camera and start another recording.
+        DispatchQueue.main.async { [unowned self] in
+            // Only enable the ability to change camera if the device has more than one camera.
+            self.didFinishRecordingBlock?(error)
+            //            self.cameraButton.isEnabled = self.videoDeviceDiscoverySession.uniqueDevicePositionsCount() > 1
+            //            self.recordButton.isEnabled = true
+            //            self.captureModeControl.isEnabled = true
+            //            self.recordButton.setTitle(NSLocalizedString("Record", comment: "Recording button record title"), for: [])
         }
     }
 }

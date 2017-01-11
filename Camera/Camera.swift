@@ -24,6 +24,12 @@ class Camera: NSObject {
     
     let videoDeviceDiscoverySession = AVCaptureDeviceDiscoverySession(deviceTypes: [.builtInWideAngleCamera, .builtInDualCamera], mediaType: AVMediaTypeVideo, position: .unspecified)!
     
+    // Movie recording callback
+    
+    var didStartRecordingBlock: (() -> Void)?
+    
+    var didFinishRecordingBlock: ((Error?) -> Void)?
+    
     // Capture mode
     enum CaptureMode {
         case photo
@@ -36,9 +42,9 @@ class Camera: NSObject {
         case off
     }
     
-    var livePhotoMode: LivePhotoMode = .off
+    private(set) var livePhotoMode: LivePhotoMode = .on
     
-    var inProgressLivePhotoCapturesCount = 0
+    var inProgressLivePhotoCapturesCount: Int = 0
     
     var inProgressPhotoCaptureDelegates: [Int64 : PhotoCaptureDelegate] = [:]
     
@@ -64,6 +70,13 @@ class Camera: NSObject {
     
     // Communicate with the session and other session objects on this queue.
     let sessionQueue = DispatchQueue(label: "camera_session_queue", attributes: [], target: nil)
+    
+    var sessionPreset: String {
+        switch livePhotoMode {
+        case .off: return AVCaptureSessionPresetHigh
+        case .on: return AVCaptureSessionPresetPhoto
+        }
+    }
     
     // Call this on the session queue.
     private func configureSession() {
@@ -338,8 +351,7 @@ class Camera: NSObject {
 //                    alertController.addAction(cancelAction)
 //                    self.present(alertController, animated: true, completion: nil)
                 }
-            }
-            else {
+            } else {
                 DispatchQueue.main.async { [unowned self] in
 //                    self.resumeButton.isHidden = true
                 }
@@ -433,8 +445,39 @@ class Camera: NSObject {
         }
     }
     
-    private func toggleCaptureMode() {
-        let captureMode: CaptureMode = .photo
+    /**
+     Change LivePhotoMode
+    */
+    
+    func change(livePhotoMode: LivePhotoMode, completion: (() -> Void)?) {
+        
+        if self.livePhotoMode == livePhotoMode {
+            return
+        }
+        
+        sessionQueue.async { [unowned self] in
+            self.livePhotoMode = livePhotoMode
+            self.session.beginConfiguration()
+            self.session.removeOutput(self.movieFileOutput)
+            self.session.sessionPreset = self.sessionPreset
+            self.session.commitConfiguration()
+            DispatchQueue.main.async {
+                completion?()
+            }
+        }
+    }
+    
+    private var captureMode: CaptureMode = .photo
+    
+    /**
+     Change capture mode
+     */
+    func change(captureMode: CaptureMode = .photo, completion: (() -> Void)?) {
+
+        if self.captureMode == captureMode {
+            return
+        }
+        
         switch captureMode {
         case .photo:
             sessionQueue.async { [unowned self] in
@@ -445,7 +488,7 @@ class Camera: NSObject {
                  */
                 self.session.beginConfiguration()
                 self.session.removeOutput(self.movieFileOutput)
-                self.session.sessionPreset = AVCaptureSessionPresetPhoto
+                self.session.sessionPreset = self.sessionPreset
                 self.session.commitConfiguration()
                 
                 self.movieFileOutput = nil
@@ -453,9 +496,8 @@ class Camera: NSObject {
                 if self.photoOutput.isLivePhotoCaptureSupported {
                     self.photoOutput.isLivePhotoCaptureEnabled = true
                     
-                    DispatchQueue.main.async { [unowned self] in
-                        //                        self.livePhotoModeButton.isEnabled = true
-                        //                        self.livePhotoModeButton.isHidden = false
+                    DispatchQueue.main.async {
+                        completion?()
                     }
                 }
             }
@@ -476,21 +518,19 @@ class Camera: NSObject {
                     
                     self.movieFileOutput = movieFileOutput
                     
-                    DispatchQueue.main.async { [unowned self] in
-                        //                        self.recordButton.isEnabled = true
+                    DispatchQueue.main.async {
+                        completion?()
                     }
                 }
             }
         }
+        
     }
 
-    
-    func changeCamera(_ cameraButton: UIButton) {
-//        cameraButton.isEnabled = false
-//        recordButton.isEnabled = false
-//        photoButton.isEnabled = false
-//        livePhotoModeButton.isEnabled = false
-//        captureModeControl.isEnabled = false
+    /**
+     Change camera
+    */
+    func changeCamera(completion: (() -> Void)?) {
         
         sessionQueue.async { [unowned self] in
             let currentVideoDevice: AVCaptureDevice = self.videoDeviceInput.device
@@ -562,102 +602,9 @@ class Camera: NSObject {
                 }
             }
             
-            DispatchQueue.main.async { [unowned self] in
-//                self.cameraButton.isEnabled = true
-//                self.recordButton.isEnabled = self.movieFileOutput != nil
-//                self.photoButton.isEnabled = true
-//                self.livePhotoModeButton.isEnabled = true
-//                self.captureModeControl.isEnabled = true
+            DispatchQueue.main.async {
+                completion?()
             }
-        }
-    }
-    
-    
-    
-}
-
-extension Camera: AVCaptureFileOutputRecordingDelegate {
-    
-    func capture(_ captureOutput: AVCaptureFileOutput!, didStartRecordingToOutputFileAt fileURL: URL!, fromConnections connections: [Any]!) {
-        // Enable the Record button to let the user stop the recording.
-        DispatchQueue.main.async { [unowned self] in
-//            self.recordButton.isEnabled = true
-//            self.recordButton.setTitle(NSLocalizedString("Stop", comment: "Recording button stop title"), for: [])
-        }
-    }
-    
-    func capture(_ captureOutput: AVCaptureFileOutput!, didFinishRecordingToOutputFileAt outputFileURL: URL!, fromConnections connections: [Any]!, error: Error!) {
-        /*
-         Note that currentBackgroundRecordingID is used to end the background task
-         associated with this recording. This allows a new recording to be started,
-         associated with a new UIBackgroundTaskIdentifier, once the movie file output's
-         `isRecording` property is back to false — which happens sometime after this method
-         returns.
-         
-         Note: Since we use a unique file path for each recording, a new recording will
-         not overwrite a recording currently being saved.
-         */
-        func cleanup() {
-            let path = outputFileURL.path
-            if FileManager.default.fileExists(atPath: path) {
-                do {
-                    try FileManager.default.removeItem(atPath: path)
-                }
-                catch {
-                    print("Could not remove file at url: \(outputFileURL)")
-                }
-            }
-            
-            if let currentBackgroundRecordingID = backgroundRecordingID {
-                backgroundRecordingID = UIBackgroundTaskInvalid
-                
-                if currentBackgroundRecordingID != UIBackgroundTaskInvalid {
-                    UIApplication.shared.endBackgroundTask(currentBackgroundRecordingID)
-                }
-            }
-        }
-        
-        var success = true
-        
-        if error != nil {
-            print("Movie file finishing error: \(error)")
-            success = (((error as NSError).userInfo[AVErrorRecordingSuccessfullyFinishedKey] as AnyObject).boolValue)!
-        }
-        
-        if success {
-            // Check authorization status.
-            PHPhotoLibrary.requestAuthorization { status in
-                if status == .authorized {
-                    // Save the movie file to the photo library and cleanup.
-                    PHPhotoLibrary.shared().performChanges({
-                        let options = PHAssetResourceCreationOptions()
-                        options.shouldMoveFile = true
-                        let creationRequest = PHAssetCreationRequest.forAsset()
-                        creationRequest.addResource(with: .video, fileURL: outputFileURL, options: options)
-                    }, completionHandler: { success, error in
-                        if !success {
-                            print("Could not save movie to photo library: \(error)")
-                        }
-                        cleanup()
-                    }
-                    )
-                }
-                else {
-                    cleanup()
-                }
-            }
-        }
-        else {
-            cleanup()
-        }
-        
-        // Enable the Camera and Record buttons to let the user switch camera and start another recording.
-        DispatchQueue.main.async { [unowned self] in
-            // Only enable the ability to change camera if the device has more than one camera.
-//            self.cameraButton.isEnabled = self.videoDeviceDiscoverySession.uniqueDevicePositionsCount() > 1
-//            self.recordButton.isEnabled = true
-//            self.captureModeControl.isEnabled = true
-//            self.recordButton.setTitle(NSLocalizedString("Record", comment: "Recording button record title"), for: [])
         }
     }
     

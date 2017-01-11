@@ -19,6 +19,7 @@
 		127675201E237EB000086D4D /* CapturePhotoDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1276751F1E237EB000086D4D /* CapturePhotoDelegate.swift */; };
 		127675221E23A7A100086D4D /* Camera.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 127675211E23A7A100086D4D /* Camera.storyboard */; };
 		127675241E23A9DC00086D4D /* Camera+PreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 127675231E23A9DC00086D4D /* Camera+PreviewView.swift */; };
+		12B47FC01E24C22700B7B6DE /* Camera+TriggerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12B47FBF1E24C22700B7B6DE /* Camera+TriggerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +37,7 @@
 		1276751F1E237EB000086D4D /* CapturePhotoDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CapturePhotoDelegate.swift; sourceTree = "<group>"; };
 		127675211E23A7A100086D4D /* Camera.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Camera.storyboard; sourceTree = "<group>"; };
 		127675231E23A9DC00086D4D /* Camera+PreviewView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Camera+PreviewView.swift"; sourceTree = "<group>"; };
+		12B47FBF1E24C22700B7B6DE /* Camera+TriggerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Camera+TriggerView.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,6 +79,7 @@
 				127675171E23396E00086D4D /* Camera+Photo.swift */,
 				127675191E23397800086D4D /* Camera+Video.swift */,
 				127675231E23A9DC00086D4D /* Camera+PreviewView.swift */,
+				12B47FBF1E24C22700B7B6DE /* Camera+TriggerView.swift */,
 				127675031E232E1F00086D4D /* Main.storyboard */,
 				127675061E232E1F00086D4D /* Assets.xcassets */,
 				127675081E232E1F00086D4D /* LaunchScreen.storyboard */,
@@ -164,6 +167,7 @@
 				1276751A1E23397800086D4D /* Camera+Video.swift in Sources */,
 				127675001E232E1F00086D4D /* AppDelegate.swift in Sources */,
 				127675201E237EB000086D4D /* CapturePhotoDelegate.swift in Sources */,
+				12B47FC01E24C22700B7B6DE /* Camera+TriggerView.swift in Sources */,
 				1276751E1E235FC900086D4D /* CameraViewController.swift in Sources */,
 				127675121E2335E500086D4D /* Camera.swift in Sources */,
 				127675181E23396E00086D4D /* Camera+Photo.swift in Sources */,
@@ -328,6 +332,7 @@
 				127675101E232E1F00086D4D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
